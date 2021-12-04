@@ -16,7 +16,7 @@ OBJ_MODS=obj/modules
 SRC_MODS=src/modules
 
 CC ?= gcc
-CFLAGS ?= -Wextra -Wall -iquote$(SRC)
+CFLAGS ?= -Wextra -Wall -iquote$(SRC) -DLOG_USE_COLOR=1
 
 .PHONY: all install uninstall clean
 

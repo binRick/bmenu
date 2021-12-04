@@ -4,9 +4,16 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 3 of the License, or (at your option)
 // any later version.  See LICENSE for more details.
+//
 
 #ifndef MENU_H
 #define MENU_H 1
+
+#define DEFAULT_LOG_LEVEL 3
+
+
+// Macros
+#define UNUSED(x) (void)(x)
 
 void menu_init(void);
 void menu_end(void);

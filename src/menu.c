@@ -4,7 +4,7 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 3 of the License, or (at your option)
 // any later version.  See LICENSE for more details.
-
+#include "icecream.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +41,7 @@ static char *menu_title = "Select Option";
 static char *menu_config = ".bmenu";
 static char *menu[MAX_MENU_OPTIONS];
 static char *command[MAX_MENU_OPTIONS];
+static char *DEFAULT_MENU_TITLE = "BMENU";
 static int  menu_count = 0;
 
 // Static Function Prototypes
@@ -90,32 +91,58 @@ int menu_load(void) {
 	char *config = menu_config;
 	char c;
 	char *menuConfigPath;
+  char *specifed_config_file = getenv("CONFIG_FILE");
+  char *specifed_log_level = getenv("LOG_LEVEL");
+  char *specifed_debug_mode = getenv("DEBUG_MODE");
+  char *homeDir = getenv("HOME");
 
+  for(int i=0; i<=5; i++){
+    log_info("Log Level #%d: %s", i, log_level_string(i));
+  }
+  log_set_level(DEFAULT_LOG_LEVEL);
+  log_info("Configured Log Level #%d:  %s", DEFAULT_LOG_LEVEL, log_level_string(DEFAULT_LOG_LEVEL));
+  if (specifed_debug_mode != NULL){
+    log_info("Specified Debug Mode: %s", specifed_debug_mode);
+    if (strcasecmp(specifed_debug_mode,"1") == 0){
+      log_set_level(1);
+      log_info("Debug Mode Enabled");
+    }
+  }
+  if (specifed_log_level != NULL){
+    log_info("Configuring Specified Log Level: %s", specifed_log_level);
+  }
+
+  if ( specifed_config_file != NULL && strlen(specifed_config_file)>0){
+    menuConfigPath = malloc(strlen(specifed_config_file) + 2);
+    strcpy(menuConfigPath, specifed_config_file);
+  }
 	// If the menu_config variable starts with a backslash then we use it
 	// as is, assuming it is a full path. If it does not start with a
 	// backslash, then we need to build the full path from the $HOME env
 	// variable.
-	if (*config == '/') {
+	if (*config == '/' && specifed_config_file == NULL){
 		menuConfigPath = config;
 	} else {
+    if (menuConfigPath == NULL){
+      if (homeDir == NULL)
+        return 1;
 
-		char *homeDir = getenv("HOME");
+      menuConfigPath = malloc(strlen(homeDir) + strlen(config) + 2);
+      if (menuConfigPath == NULL)
+        return 3;
 
-		if (homeDir == NULL)
-			return 1;
-
-		menuConfigPath = malloc(strlen(homeDir) + strlen(config) + 2);
-
-		if (menuConfigPath == NULL)
-			return 3;
-
-		strcpy(menuConfigPath, homeDir);
-		strcat(menuConfigPath, "/");
-		strcat(menuConfigPath, config);
+      strcpy(menuConfigPath, homeDir);
+      strcat(menuConfigPath, "/");
+      strcat(menuConfigPath, config);
+    }
+	}
 
 		if (!menu_exists(menuConfigPath))
 			menu_create(menuConfigPath);
-	}
+
+  ic_str(menuConfigPath, specifed_config_file, homeDir);
+  //log_info("Config File: %s", menuConfigPath);
+
 
 	// Open file
 	FILE *menuConfig = fopen(menuConfigPath, "r");
@@ -256,15 +283,21 @@ static int menu_max_cols(void) {
 /*
  * Print menu header.
  */
+
 static void menu_print_header(char *v) {
+  UNUSED(v);
+
 	int i;
+  char MENU_HEADER[100];
+  char *specifed_menu_title = getenv("MENU_TITLE");
+  sprintf(MENU_HEADER,"%s", ((specifed_menu_title != NULL) ? specifed_menu_title : DEFAULT_MENU_TITLE));
 	int term_cols = tio_get_cols();
 	
 	tio_move_cursor(1, 2);
 	
 	tio_set_text_normal();
 	tio_set_text_bold();
-	printf("B-MENU v%s", v);
+	printf("%s", MENU_HEADER);
 	tio_set_text_normal();
 	
 	tio_move_cursor(2, 1);
@@ -329,12 +362,12 @@ static void menu_print_border(void) {
 	// Printing inner border title
 	tio_set_text_bold();
 	tio_move_cursor(startRow - 1, startCol);
-	printf("%s", menu_title);
+	printf("  %s", menu_title);
 	tio_set_text_normal();
 	
 	// Outer border size
-	borderCols += 4;
-	borderRows += 4;
+	borderCols += 24;
+	borderRows += 12;
 	startCol = ((term_cols / 2) - (borderCols / 2));
 	startRow = ((term_rows / 2) - (borderRows / 2));
 	if (startCol < 0)
