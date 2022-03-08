@@ -1,14 +1,14 @@
 #include "log/log.c"
 #include "time/timequick.h"
 #include "time/timestamp.c"
-#include "menu-simple.h"
 #include "menu.h"
 #include <stdio.h>
 #include <unistd.h>
+#include "menu-simple.h"
 
 
-struct MenuResult1 * new_menu_result(){
-  struct MenuResult1 *t = malloc(sizeof(MenuResult1));
+MenuResult1 * new_menu_result(){
+  MenuResult1 *t = malloc(sizeof(MenuResult1));
   t->started = timestamp();
   t->ok = false;
   sprintf(&t->command, "%s", "UNKNOWN");
@@ -16,8 +16,9 @@ struct MenuResult1 * new_menu_result(){
     return t;
 }
 
-struct MenuResult1 * menu_simple(){
-  struct MenuResult1 *R = new_menu_result();
+MenuResult1 * menu_simple(){
+  log_set_level(LOG_LEVEL);
+  MenuResult1 *R = new_menu_result();
   int               c, lo = 1, fo = 1;
 
   tq_start("menu load");

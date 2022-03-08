@@ -1,3 +1,8 @@
+#ifndef SIMPLE_MENU_H
+#define SIMPLE_MENU_H
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_ERROR
+#endif
 #include "reflect/src/reflect.c"
 #include "reflect/include/stp_print.h"
 /*********************************/
@@ -28,6 +33,7 @@ REFLECTIVE(MenuResult2,
            FIELD(unsigned long, started);
            FIELD(unsigned long, ended);
            );
+
 stp_print_begin(MenuResult2, 9) {
   stp_print_field_int(selected);
   stp_print_field_int(result);
@@ -42,6 +48,6 @@ stp_print_begin(MenuResult2, 9) {
 }
 /*********************************************/
 
+MenuResult1 * menu_simple();
 
-
-struct MenuResult1 * menu_simple();
+#endif
