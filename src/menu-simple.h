@@ -3,6 +3,7 @@
 #ifndef LOG_LEVEL
 #define LOG_LEVEL LOG_ERROR
 #endif
+#include "ic/ic.h"
 #include "reflect/src/reflect.c"
 #include "reflect/include/stp_print.h"
 /*********************************/
@@ -15,9 +16,9 @@ typedef struct MenuResult1 {
   int  items;
   bool ok;
   char *dur;
-  unsigned long ms;
-  unsigned int started;
-  unsigned int ended;
+  int ms;
+  unsigned long started;
+  unsigned long ended;
 } MenuResult1;
 
 

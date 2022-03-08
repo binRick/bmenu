@@ -1,41 +1,43 @@
 #include "log/log.c"
+#include "menu-simple.h"
+#include "menu.h"
 #include "time/timequick.h"
 #include "time/timestamp.c"
-#include "menu.h"
 #include <stdio.h>
 #include <unistd.h>
-#include "menu-simple.h"
 
 
 MenuResult1 * new_menu_result(){
   MenuResult1 *t = malloc(sizeof(MenuResult1));
+
   t->started = timestamp();
-  t->ok = false;
+  t->ok      = false;
   sprintf(&t->command, "%s", "UNKNOWN");
-  t->items  = menu_get_count();
-    return t;
+  t->items = menu_get_count();
+  return(t);
 }
+
 
 MenuResult1 * menu_simple(){
   log_set_level(LOG_LEVEL);
   MenuResult1 *R = new_menu_result();
-  int               c, lo = 1, fo = 1;
+  int         c, lo = 1, fo = 1;
 
   tq_start("menu load");
   R->result = menu_load();
-  R->dur = strdup(tq_stop("menu load"));
-  R->ended = timestamp();
-  R->ms = R->ended - R->started;
+  R->dur    = strdup(tq_stop("menu load"));
+  R->ended  = timestamp();
+  R->ms     = R->ended - R->started;
 
   log_info("%d items> res:%d in %s", R->items, R->result, R->dur);
 
   switch (R->result) {
   case 0:
-      log_debug(
-              AC_RESETALL AC_GREEN AC_REVERSED "#%d Items loaded!" AC_RESETALL
-              "",
-              menu_get_count()
-              );
+    log_debug(
+      AC_RESETALL AC_GREEN AC_REVERSED "#%d Items loaded!" AC_RESETALL
+      "",
+      menu_get_count()
+      );
 
     break;
   case 1:
@@ -69,6 +71,15 @@ MenuResult1 * menu_simple(){
       c = getchar();
     }
     switch (c) {
+    case 49:
+    case 50:
+    case 51:
+    case 52:
+    case 53:
+    case 54:
+    case 55:
+      lo = c - 48;
+      break;
     case KEY_UP:
     case KEY_K:
       if (lo > 1) {
@@ -105,7 +116,7 @@ MenuResult1 * menu_simple(){
       log_debug("Unhandled key: %d", c);
 
       break;
-    }
+    } /* switch */
     menu_show(VERSION, lo, fo);
   }
   menu_end();
@@ -114,7 +125,7 @@ MenuResult1 * menu_simple(){
   R->result = (fo - 1);
   switch (fo) {
   case 1:
-      R->ok = true;
+    R->ok      = true;
     R->command = strdup(get_command(lo));
     log_info("menu ended. selected option #%d", lo);
     log_info("      cmd: %s", R->command);
