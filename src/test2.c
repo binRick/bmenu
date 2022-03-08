@@ -1,14 +1,6 @@
-// Copyright (c) 2017 Brian Barto
-//
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 3 of the License, or (at your option)
-// any later version.  See LICENSE for more details.
-
 #include "menu.h"
 #include <stdio.h>
 #include <unistd.h>
-
 #define VERSION      "0.2.1"
 
 #define KEY_ENTER    10         // enter key

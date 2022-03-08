@@ -16,13 +16,20 @@ OBJ_MODS=obj/modules
 SRC_MODS=src/modules
 
 CC ?= gcc
-CFLAGS ?= -Wextra -Wall -iquote$(SRC) -DLOG_USE_COLOR=1
+CFLAGS ?= -Wextra -Wall -iquote$(SRC) -DLOG_USE_COLOR=1 -I../../src/. -luv -lcurl
 
 .PHONY: all install uninstall clean
 
-EXES = bmenu
+EXES = bmenu test1 test2
 
 all: $(EXES)
+
+
+test2: $(OBJ)/tio.o $(OBJ)/menu.o $(OBJ)/test2.o | $(BIN)
+	$(CC) $(CFLAGS) -o $(BIN)/$@ $^ 
+
+test1: $(OBJ)/tio.o $(OBJ)/menu.o $(OBJ)/test1.o | $(BIN)
+	$(CC) $(CFLAGS) -o $(BIN)/$@ $^ 
 
 bmenu: $(OBJ)/tio.o $(OBJ)/menu.o $(OBJ)/main.o | $(BIN)
 	$(CC) $(CFLAGS) -o $(BIN)/$@ $^ 

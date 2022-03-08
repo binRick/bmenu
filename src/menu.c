@@ -1,48 +1,42 @@
-// Copyright (c) 2017 Brian Barto
-//
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 3 of the License, or (at your option)
-// any later version.  See LICENSE for more details.
-#include "icecream.h"
+#include "menu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
-#include "menu.h"
+#include <unistd.h>
+//#include "icecream.h"
 #include "tio.h"
 
 // Menu option size limits
-#define MAX_MENU_OPTIONS   10
-#define MAX_MENU_LENGTH    100
-#define MAX_COMMAND_LENGTH 1000
+#define MAX_MENU_OPTIONS      10
+#define MAX_MENU_LENGTH       100
+#define MAX_COMMAND_LENGTH    1000
 
 // Menu Border Characters
-#define INNER_ULCORNER     "\xe2\x94\x8C"
-#define INNER_URCORNER     "\xe2\x95\x96"
-#define INNER_LLCORNER     "\xe2\x95\x98"
-#define INNER_LRCORNER     "\xe2\x95\x9D"
-#define OUTER_ULCORNER     "\xe2\x95\x94"
-#define OUTER_URCORNER     "\xe2\x95\x95"
-#define OUTER_LLCORNER     "\xe2\x95\x99"
-#define OUTER_LRCORNER     "\xe2\x94\x98"
-#define OUTER_LTEE         "\xe2\x95\xA0"
-#define OUTER_RTEE         "\xe2\x95\xA1"
-#define HLINE              "\xe2\x94\x80"
-#define DHLINE             "\xe2\x95\x90"
-#define VLINE              "\xe2\x94\x82"
-#define DVLINE             "\xe2\x95\x91"
-#define SHADE              "\xe2\x96\x91"
-#define ARROW              "\xe2\x96\xBA"
+#define INNER_ULCORNER        "\xe2\x94\x8C"
+#define INNER_URCORNER        "\xe2\x95\x96"
+#define INNER_LLCORNER        "\xe2\x95\x98"
+#define INNER_LRCORNER        "\xe2\x95\x9D"
+#define OUTER_ULCORNER        "\xe2\x95\x94"
+#define OUTER_URCORNER        "\xe2\x95\x95"
+#define OUTER_LLCORNER        "\xe2\x95\x99"
+#define OUTER_LRCORNER        "\xe2\x94\x98"
+#define OUTER_LTEE            "\xe2\x95\xA0"
+#define OUTER_RTEE            "\xe2\x95\xA1"
+#define HLINE                 "\xe2\x94\x80"
+#define DHLINE                "\xe2\x95\x90"
+#define VLINE                 "\xe2\x94\x82"
+#define DVLINE                "\xe2\x95\x91"
+#define SHADE                 "\xe2\x96\x91"
+#define ARROW                 "\xe2\x96\xBA"
 
 // Static Variables
-static char *menu_title = "Select Option";
+static char *menu_title  = "Select Option";
 static char *menu_config = ".bmenu";
 static char *menu[MAX_MENU_OPTIONS];
 static char *command[MAX_MENU_OPTIONS];
 static char *DEFAULT_MENU_TITLE = "BMENU";
-static int  menu_count = 0;
+static int  menu_count          = 0;
 
 // Static Function Prototypes
 static void menu_create(char *);
@@ -52,434 +46,485 @@ static void menu_print_header(char *);
 static void menu_print_border(void);
 static void menu_print_options(int, int);
 
+
 /*
  * Initialize and configure the terminal for output.
  */
 void menu_init(void) {
-	tio_init_terminal();
+  tio_init_terminal();
 }
+
 
 /*
  * Restore terminal settings.
  */
 void menu_end(void) {
-	tio_restore_terminal();
+  tio_restore_terminal();
 }
+
 
 /*
  * Set menu title variable.
  */
 void menu_set_title(char *title) {
-	menu_title = malloc(strlen(title) + 1);
-	strcpy(menu_title, title);
+  menu_title = malloc(strlen(title) + 1);
+  strcpy(menu_title, title);
 }
+
 
 /*
  * Set config file location.
  */
 void menu_set_config(char *config) {
-	menu_config = malloc(strlen(config) + 1);
-	strcpy(menu_config, config);
+  menu_config = malloc(strlen(config) + 1);
+  strcpy(menu_config, config);
 }
+
 
 /*
  * Load the menu config file. Return a non-zero result if anything goes
  * wrong.
  */
 int menu_load(void) {
-	int i, j;
-	char *config = menu_config;
-	char c;
-	char *menuConfigPath;
+  int  i, j;
+  char *config = menu_config;
+  char c;
+  char *menuConfigPath;
   char *specifed_config_file = getenv("CONFIG_FILE");
-  char *specifed_log_level = getenv("LOG_LEVEL");
-  char *specifed_debug_mode = getenv("DEBUG_MODE");
-  char *homeDir = getenv("HOME");
+  char *specifed_log_level   = getenv("LOG_LEVEL");
+  char *specifed_debug_mode  = getenv("DEBUG_MODE");
+  char *homeDir              = getenv("HOME");
 
-  for(int i=0; i<=5; i++){
-    log_info("Log Level #%d: %s", i, log_level_string(i));
-  }
-  log_set_level(DEFAULT_LOG_LEVEL);
-  log_info("Configured Log Level #%d:  %s", DEFAULT_LOG_LEVEL, log_level_string(DEFAULT_LOG_LEVEL));
-  if (specifed_debug_mode != NULL){
-    log_info("Specified Debug Mode: %s", specifed_debug_mode);
-    if (strcasecmp(specifed_debug_mode,"1") == 0){
-      log_set_level(1);
-      log_info("Debug Mode Enabled");
-    }
-  }
-  if (specifed_log_level != NULL){
-    log_info("Configuring Specified Log Level: %s", specifed_log_level);
-  }
+/*
+ * for(int i=0; i<=5; i++){
+ *  log_info("Log Level #%d: %s", i, log_level_string(i));
+ * }
+ * log_set_level(DEFAULT_LOG_LEVEL);
+ * log_info("Configured Log Level #%d:  %s", DEFAULT_LOG_LEVEL, log_level_string(DEFAULT_LOG_LEVEL));
+ * if (specifed_debug_mode != NULL){
+ *  log_info("Specified Debug Mode: %s", specifed_debug_mode);
+ *  if (strcasecmp(specifed_debug_mode,"1") == 0){
+ *    log_set_level(1);
+ *    log_info("Debug Mode Enabled");
+ *  }
+ * }
+ * if (specifed_log_level != NULL){
+ *  log_info("Configuring Specified Log Level: %s", specifed_log_level);
+ * }
+ */
 
-  if ( specifed_config_file != NULL && strlen(specifed_config_file)>0){
+  if (specifed_config_file != NULL && strlen(specifed_config_file) > 0) {
     menuConfigPath = malloc(strlen(specifed_config_file) + 2);
     strcpy(menuConfigPath, specifed_config_file);
   }
-	// If the menu_config variable starts with a backslash then we use it
-	// as is, assuming it is a full path. If it does not start with a
-	// backslash, then we need to build the full path from the $HOME env
-	// variable.
-	if (*config == '/' && specifed_config_file == NULL){
-		menuConfigPath = config;
-	} else {
-    if (menuConfigPath == NULL){
-      if (homeDir == NULL)
-        return 1;
+  // If the menu_config variable starts with a backslash then we use it
+  // as is, assuming it is a full path. If it does not start with a
+  // backslash, then we need to build the full path from the $HOME env
+  // variable.
+  if (*config == '/' && specifed_config_file == NULL) {
+    menuConfigPath = config;
+  } else {
+    if (menuConfigPath == NULL) {
+      if (homeDir == NULL) {
+        return(1);
+      }
 
       menuConfigPath = malloc(strlen(homeDir) + strlen(config) + 2);
-      if (menuConfigPath == NULL)
-        return 3;
+      if (menuConfigPath == NULL) {
+        return(3);
+      }
 
       strcpy(menuConfigPath, homeDir);
       strcat(menuConfigPath, "/");
       strcat(menuConfigPath, config);
     }
-	}
+  }
 
-		if (!menu_exists(menuConfigPath))
-			menu_create(menuConfigPath);
+  if (!menu_exists(menuConfigPath)) {
+    menu_create(menuConfigPath);
+  }
 
-  ic_str(menuConfigPath, specifed_config_file, homeDir);
+  //ic_str(menuConfigPath, specifed_config_file, homeDir);
   //log_info("Config File: %s", menuConfigPath);
 
 
-	// Open file
-	FILE *menuConfig = fopen(menuConfigPath, "r");
+  // Open file
+  FILE *menuConfig = fopen(menuConfigPath, "r");
 
-	// If there was an issue opening the file, return to main()
-	if (menuConfig == NULL)
-		return 2;
+  // If there was an issue opening the file, return to main()
+  if (menuConfig == NULL) {
+    return(2);
+  }
 
-	// Loop over config file and store menu items
-	for (i = 0; i < MAX_MENU_OPTIONS; ++i) {
-		
-		// Allocate menumemory
-		menu[i] = malloc(MAX_MENU_LENGTH);
-		memset(menu[i], 0, MAX_MENU_LENGTH);
-		
-		// Allocate command memory
-		command[i] = malloc(MAX_COMMAND_LENGTH);
-		memset(command[i], 0, MAX_COMMAND_LENGTH);
-		
-		// Getting menu text
-		for (j = 0; (c = fgetc(menuConfig)) != EOF && c != ':' && c != '\n'; ++j) {
-			menu[i][j] = c;
-		}
-		if (c == '\n') {
-			free(menu[i]);
-			free(command[i]);
-			--i;
-			continue;
-		}
-		if (c == EOF) {
-			break;
-		}
-		
-		// Getting menu command
-		for (j = 0; (c = fgetc(menuConfig)) != EOF && c != '\n'; ++j) {
-			command[i][j] = c;
-		}
-		if (c == EOF) {
-			break;
-		}
-	}
-	
-	// Keep track of menu count
-	menu_count = i;
+  // Loop over config file and store menu items
+  for (i = 0; i < MAX_MENU_OPTIONS; ++i) {
+    // Allocate menumemory
+    menu[i] = malloc(MAX_MENU_LENGTH);
+    memset(menu[i], 0, MAX_MENU_LENGTH);
 
-	return 0;
-}
+    // Allocate command memory
+    command[i] = malloc(MAX_COMMAND_LENGTH);
+    memset(command[i], 0, MAX_COMMAND_LENGTH);
+
+    // Getting menu text
+    for (j = 0; (c = fgetc(menuConfig)) != EOF && c != ':' && c != '\n'; ++j) {
+      menu[i][j] = c;
+    }
+    if (c == '\n') {
+      free(menu[i]);
+      free(command[i]);
+      --i;
+      continue;
+    }
+    if (c == EOF) {
+      break;
+    }
+
+    // Getting menu command
+    for (j = 0; (c = fgetc(menuConfig)) != EOF && c != '\n'; ++j) {
+      command[i][j] = c;
+    }
+    if (c == EOF) {
+      break;
+    }
+  }
+
+  // Keep track of menu count
+  menu_count = i;
+
+  return(0);
+} /* menu_load */
+
+
 /*
  * Return the number of menu items loaded by menu_load().
  */
 int menu_get_count(void) {
-	return menu_count;
+  return(menu_count);
 }
+
 
 /*
  * Return the menu file path used by menu_load().
  */
 char *menu_get_config_path(void) {
-	return menu_config;
+  return(menu_config);
 }
+
 
 /*
  * Display the menu to the user. lo and fo represent the list option and
  * the foot option that should be highlighted.
  */
 void menu_show(char *version, int lo, int fo) {
-	// print menu header
-	menu_print_header(version);
+  // print menu header
+  menu_print_header(version);
 
-	// print inner border
-	menu_print_border();
-	
-	// print menu options
-	menu_print_options(lo, fo);
+  // print inner border
+  menu_print_border();
+
+  // print menu options
+  menu_print_options(lo, fo);
 }
+
+
+char *get_command(int i){
+  char cmd[MAX_COMMAND_LENGTH];
+
+  sprintf(&cmd, "%s", command[i - 1]);
+  return(strdup(&cmd));
+}
+
 
 /*
  * Execute the command at index lo.
  */
 void menu_execute(int lo) {
-	execl("/bin/sh", "/bin/sh", "-c", command[lo - 1], (char *) NULL);
+  //log_error("exec:%d", lo);
+
+  //execl("/bin/sh", "/bin/sh", "-c", command[lo - 1], (char *) NULL);
 }
+
 
 /*
  * Free all allocated memory for menu and command arrays.
  */
 void menu_free_all(void) {
-	int i;
+  int i;
 
-	for (i = 0; i < menu_count; ++i) {
-		free(menu[i]);
-		free(command[i]);
-	}
+  for (i = 0; i < menu_count; ++i) {
+    free(menu[i]);
+    free(command[i]);
+  }
 }
 
+
 ///////////////////////////////////////////////////////////////////////
+
+
 // STATIC FUNCTIONS
+
+
 ///////////////////////////////////////////////////////////////////////
+
 
 /*
  * Create a new menu configuration file
  */
 static void menu_create(char *path) {
-	FILE *menu = fopen(path, "w");
+  FILE *menu = fopen(path, "w");
 
-	// Return if we can't open the file. menu_load() will
-	// ultimately return an error code to main which will
-	// terminate the program with an error message.
-	if (menu == NULL)
-		return;
+  // Return if we can't open the file. menu_load() will
+  // ultimately return an error code to main which will
+  // terminate the program with an error message.
+  if (menu == NULL) {
+    return;
+  }
 
-	fprintf(menu, "Clear Screen:/bin/clear\n");
-	fprintf(menu, "Dir Listing:/bin/ls -l");
-	fclose(menu);
+  fprintf(menu, "XX:/bin/clear\n");
+  fprintf(menu, "Clear Screen:/bin/clear\n");
+  fprintf(menu, "Dir Listing:/bin/ls -l");
+  fclose(menu);
 }
+
 
 /*
  * Check if a menu file exists at the given path.
  */
 static int menu_exists(char *path) {
-	struct stat buffer;
-	return (stat(path, &buffer) == 0);
+  struct stat buffer;
+
+  return(stat(path, &buffer) == 0);
 }
+
 
 /*
  * Return the menu column width.
  */
 static int menu_max_cols(void) {
-	int i, l;
+  int i, l;
 
-	for (l = 0, i = 0; i < menu_count; ++i)
-		if (l < (int)strlen(menu[i]))
-			l = strlen(menu[i]);
+  for (l = 0, i = 0; i < menu_count; ++i) {
+    if (l < (int)strlen(menu[i])) {
+      l = strlen(menu[i]);
+    }
+  }
 
-	return l;
+  return(l);
 }
+
 
 /*
  * Print menu header.
  */
 
+
 static void menu_print_header(char *v) {
   UNUSED(v);
 
-	int i;
+  int  i;
   char MENU_HEADER[100];
   char *specifed_menu_title = getenv("MENU_TITLE");
-  sprintf(MENU_HEADER,"%s", ((specifed_menu_title != NULL) ? specifed_menu_title : DEFAULT_MENU_TITLE));
-	int term_cols = tio_get_cols();
-	
-	tio_move_cursor(1, 2);
-	
-	tio_set_text_normal();
-	tio_set_text_bold();
-	printf("%s", MENU_HEADER);
-	tio_set_text_normal();
-	
-	tio_move_cursor(2, 1);
-	
-	for (i = 0; i < term_cols; ++i)
-		printf("%s", DHLINE);
+
+  sprintf(MENU_HEADER, "%s", ((specifed_menu_title != NULL) ? specifed_menu_title : DEFAULT_MENU_TITLE));
+  int term_cols = tio_get_cols();
+
+  tio_move_cursor(1, 2);
+
+  tio_set_text_normal();
+  tio_set_text_bold();
+  printf("%s", MENU_HEADER);
+  tio_set_text_normal();
+
+  tio_move_cursor(2, 1);
+
+  for (i = 0; i < term_cols; ++i) {
+    printf("%s", DHLINE);
+  }
 }
+
 
 /*
  * Print menu borders.
  */
 static void menu_print_border(void) {
-	int i, j;
-	int borderCols, borderRows, startCol, startRow;
-	int term_cols = tio_get_cols();
-	int term_rows = tio_get_rows();
-	int menu_cols = menu_max_cols();
-	
-	// Inner border size
-	borderCols = menu_cols + 8;
-	borderRows = menu_count + 4;
-	if (borderCols < 25)
-		borderCols = 25;
-	startCol = (term_cols / 2) - (borderCols / 2);
-	startRow = (term_rows / 2) - (borderRows / 2);
-	if (startCol < 0)
-		startCol = 0;
-	if (startRow < 0)
-		startRow = 0;
-	
-	// Printing inner border
-	for (i = 0; i < borderRows; ++i) {
-		for (j = 0; j < borderCols; ++j) {
-			if (i == 0 && j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", INNER_ULCORNER);
-			} else if (i == 0 && j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", INNER_URCORNER);
-			} else if (i == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", HLINE);
-			} else if (i == borderRows - 1 && j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", INNER_LLCORNER);
-			} else if (i == borderRows - 1 && j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", INNER_LRCORNER);
-			} else if (i == borderRows - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", DHLINE);
-			} else if (j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", VLINE);
-			} else if (j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", DVLINE);
-			}
-		}
-	}
-	
-	// Printing inner border title
-	tio_set_text_bold();
-	tio_move_cursor(startRow - 1, startCol);
-	printf("  %s", menu_title);
-	tio_set_text_normal();
-	
-	// Outer border size
-	borderCols += 24;
-	borderRows += 12;
-	startCol = ((term_cols / 2) - (borderCols / 2));
-	startRow = ((term_rows / 2) - (borderRows / 2));
-	if (startCol < 0)
-		startCol = 0;
-	if (startRow < 0)
-		startRow = 0;
-	borderRows += 3;          // Extra rows for select/exit options
-	
-	// printing border (outer)
-	for (i = 0; i < borderRows; ++i) {
-		for (j = 0; j < borderCols; ++j) {
-			if (i == 0 && j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_ULCORNER);
-			} else if (i == 0 && j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_URCORNER);
-			} else if (i == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", DHLINE);
-			} else if (i == borderRows - 1 && j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_LLCORNER);
-			} else if (i == borderRows - 1 && j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_LRCORNER);
-				tio_move_cursor(i + startRow + 1, j + startCol + 1);
-				printf("%s", SHADE);
-			} else if (i == borderRows - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", HLINE);
-				tio_move_cursor(i + startRow + 1, j + startCol + 1);
-				printf("%s", SHADE);
-			} else if (j == 0 && i == borderRows - 3) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_LTEE);
-			} else if (j == borderCols - 1 && i == borderRows - 3) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", OUTER_RTEE);
-				tio_move_cursor(i + startRow + 1, j + startCol + 1);
-				printf("%s", SHADE);
-			} else if (j == 0) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", DVLINE);
-			} else if (j == borderCols - 1) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", VLINE);
-				tio_move_cursor(i + startRow + 1, j + startCol + 1);
-				printf("%s", SHADE);
-			} else if (i == borderRows - 3) {
-				tio_move_cursor(i + startRow, j + startCol);
-				printf("%s", DHLINE);
-			}
-		}
-	}
-}
+  int i, j;
+  int borderCols, borderRows, startCol, startRow;
+  int term_cols = tio_get_cols();
+  int term_rows = tio_get_rows();
+  int menu_cols = menu_max_cols();
+
+  // Inner border size
+  borderCols = menu_cols + 8;
+  borderRows = menu_count + 4;
+  if (borderCols < 25) {
+    borderCols = 25;
+  }
+  startCol = (term_cols / 2) - (borderCols / 2);
+  startRow = (term_rows / 2) - (borderRows / 2);
+  if (startCol < 0) {
+    startCol = 0;
+  }
+  if (startRow < 0) {
+    startRow = 0;
+  }
+
+  // Printing inner border
+  for (i = 0; i < borderRows; ++i) {
+    for (j = 0; j < borderCols; ++j) {
+      if (i == 0 && j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", INNER_ULCORNER);
+      } else if (i == 0 && j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", INNER_URCORNER);
+      } else if (i == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", HLINE);
+      } else if (i == borderRows - 1 && j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", INNER_LLCORNER);
+      } else if (i == borderRows - 1 && j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", INNER_LRCORNER);
+      } else if (i == borderRows - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", DHLINE);
+      } else if (j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", VLINE);
+      } else if (j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", DVLINE);
+      }
+    }
+  }
+
+  // Printing inner border title
+  tio_set_text_bold();
+  tio_move_cursor(startRow - 1, startCol);
+  printf("  %s", menu_title);
+  tio_set_text_normal();
+
+  // Outer border size
+  borderCols += 24;
+  borderRows += 12;
+  startCol    = ((term_cols / 2) - (borderCols / 2));
+  startRow    = ((term_rows / 2) - (borderRows / 2));
+  if (startCol < 0) {
+    startCol = 0;
+  }
+  if (startRow < 0) {
+    startRow = 0;
+  }
+  borderRows += 3;                // Extra rows for select/exit options
+
+  // printing border (outer)
+  for (i = 0; i < borderRows; ++i) {
+    for (j = 0; j < borderCols; ++j) {
+      if (i == 0 && j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_ULCORNER);
+      } else if (i == 0 && j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_URCORNER);
+      } else if (i == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", DHLINE);
+      } else if (i == borderRows - 1 && j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_LLCORNER);
+      } else if (i == borderRows - 1 && j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_LRCORNER);
+        tio_move_cursor(i + startRow + 1, j + startCol + 1);
+        printf("%s", SHADE);
+      } else if (i == borderRows - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", HLINE);
+        tio_move_cursor(i + startRow + 1, j + startCol + 1);
+        printf("%s", SHADE);
+      } else if (j == 0 && i == borderRows - 3) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_LTEE);
+      } else if (j == borderCols - 1 && i == borderRows - 3) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", OUTER_RTEE);
+        tio_move_cursor(i + startRow + 1, j + startCol + 1);
+        printf("%s", SHADE);
+      } else if (j == 0) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", DVLINE);
+      } else if (j == borderCols - 1) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", VLINE);
+        tio_move_cursor(i + startRow + 1, j + startCol + 1);
+        printf("%s", SHADE);
+      } else if (i == borderRows - 3) {
+        tio_move_cursor(i + startRow, j + startCol);
+        printf("%s", DHLINE);
+      }
+    }
+  }
+} /* menu_print_border */
+
 
 /*
  * Print menu options with current selections highlighted as indicated
  * by lo and fo (list option and foot option).
  */
 static void menu_print_options(int lo, int fo) {
-	int i, startCol, startRow, sCol, eCol;
-	int term_cols = tio_get_cols();
-	int term_rows = tio_get_rows();
-	int menu_cols = menu_max_cols();
-	
-	// Menu starting position
-	startCol = ((term_cols / 2) - (menu_cols / 2));
-	startRow = ((term_rows / 2) - (menu_count / 2));
-	if (startCol < 0)
-		startCol = 0;
-	if (startRow < 0)
-		startRow = 0;
+  int i, startCol, startRow, sCol, eCol;
+  int term_cols = tio_get_cols();
+  int term_rows = tio_get_rows();
+  int menu_cols = menu_max_cols();
 
-	// Inserting menu in to terminal window
-	for (i = 0; i < menu_count; ++i) {
+  // Menu starting position
+  startCol = ((term_cols / 2) - (menu_cols / 2));
+  startRow = ((term_rows / 2) - (menu_count / 2));
+  if (startCol < 0) {
+    startCol = 0;
+  }
+  if (startRow < 0) {
+    startRow = 0;
+  }
 
-		// Printing selection marker if on selected row, and removing any previous
-		// marker if not.
-		if (i == lo - 1) {
-			tio_set_text_highlight();
-			tio_move_cursor(i + startRow, startCol - 2);
-			printf("%s", ARROW);
-			tio_move_cursor(i + startRow, startCol);
-			printf("%s", menu[i]);
-			tio_set_text_normal();
-		} else {
-			tio_move_cursor(i + startRow, startCol - 2);
-			printf(" ");
-			tio_move_cursor(i + startRow, startCol);
-			printf("%s", menu[i]);
-		}
+  // Inserting menu in to terminal window
+  for (i = 0; i < menu_count; ++i) {
+    // Printing selection marker if on selected row, and removing any previous
+    // marker if not.
+    if (i == lo - 1) {
+      tio_set_text_highlight();
+      tio_move_cursor(i + startRow, startCol - 2);
+      printf("%s", ARROW);
+      tio_move_cursor(i + startRow, startCol);
+      printf("%s", menu[i]);
+      tio_set_text_normal();
+    } else {
+      tio_move_cursor(i + startRow, startCol - 2);
+      printf(" ");
+      tio_move_cursor(i + startRow, startCol);
+      printf("%s", menu[i]);
+    }
 
-		// printing menu foot options (select/exit)
-		if (i == menu_count - 1) {
-			sCol = (term_cols / 2) - ((menu_cols + 8 > 25 ? menu_cols + 8 : 25) / 2) + 1;
-			eCol = (term_cols / 2) + ((menu_cols + 8 > 25 ? menu_cols + 8 : 25) / 2) - 8;
-			if (fo == 1) {
-				tio_set_text_highlight();
-				tio_move_cursor(i + startRow + 6, sCol);
-				printf("< select >");
-				tio_set_text_normal();
-				tio_move_cursor(i + startRow + 6, eCol);
-				printf("< exit >");
-			} else {
-				tio_move_cursor(i + startRow + 6, sCol);
-				printf("< select >");
-				tio_set_text_highlight();
-				tio_move_cursor(i + startRow + 6, eCol);
-				printf("< exit >");
-			}
-		}
-	}
-}
+    // printing menu foot options (select/exit)
+    if (i == menu_count - 1) {
+      sCol = (term_cols / 2) - ((menu_cols + 8 > 25 ? menu_cols + 8 : 25) / 2) + 1;
+      eCol = (term_cols / 2) + ((menu_cols + 8 > 25 ? menu_cols + 8 : 25) / 2) - 8;
+      if (fo == 1) {
+        tio_set_text_highlight();
+        tio_move_cursor(i + startRow + 6, sCol);
+        printf("< select >");
+        tio_set_text_normal();
+        tio_move_cursor(i + startRow + 6, eCol);
+        printf("< exit >");
+      } else {
+        tio_move_cursor(i + startRow + 6, sCol);
+        printf("< select >");
+        tio_set_text_highlight();
+        tio_move_cursor(i + startRow + 6, eCol);
+        printf("< exit >");
+      }
+    }
+  }
+} /* menu_print_options */

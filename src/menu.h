@@ -1,11 +1,3 @@
-// Copyright (c) 2017 Brian Barto
-//
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 3 of the License, or (at your option)
-// any later version.  See LICENSE for more details.
-//
-
 #ifndef MENU_H
 #define MENU_H 1
 
@@ -25,5 +17,23 @@ char *menu_get_config_path(void);
 void menu_show(char *, int, int);
 void menu_execute(int);
 void menu_free_all(void);
+
+
+
+#define KEY_ENTER   10          // enter key
+#define KEY_ESC     27          // escape char indicating an arrow key
+#define KEY_DOWN    66          // down-arrow key
+#define KEY_UP      65          // up-arrow key
+#define KEY_LEFT    68          // left-arrow key
+#define KEY_RIGHT   67          // right-arrow key
+#define KEY_H       104         // h key
+#define KEY_J       106         // j key
+#define KEY_K       107         // k key
+#define KEY_L       108         // l key
+#define KEY_TAB     9         // tab key
+
+#ifndef VERSION
+#define VERSION              "0.2.1"
+#endif
 
 #endif
