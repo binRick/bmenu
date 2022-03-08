@@ -35,7 +35,7 @@ static char *menu_title  = "Select Option";
 static char *menu_config = ".bmenu";
 static char *menu[MAX_MENU_OPTIONS];
 static char *command[MAX_MENU_OPTIONS];
-static char *DEFAULT_MENU_TITLE = "BMENU";
+static char *DEFAULT_MENU_TITLE = "Menu";
 static int  menu_count          = 0;
 
 // Static Function Prototypes

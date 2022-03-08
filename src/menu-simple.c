@@ -1,34 +1,43 @@
 #include "../../log/log.c"
+#include "menu-simple.h"
 #include "menu.h"
 #include <stdio.h>
 #include <unistd.h>
 
+struct MenuResult menu_simple(){
+  struct MenuResult *R = malloc(sizeof(MenuResult));
 
-int menu_simple(){
-  int c, lo = 1, fo = 1;
-  int menu_result = menu_load();
+  sprintf(&R->command, "%s", "UNKNOWN");
+  struct MenuResult r = *R;
+  int               c, lo = 1, fo = 1;
 
-  log_info("%d items> res:%d", menu_get_count(), menu_result);
+  r.result = menu_load();
+  r.items  = menu_get_count();
 
-  switch (menu_result) {
+  log_info("%d items> res:%d", menu_get_count(), r.result);
+
+  switch (r.result) {
   case 1:
     fprintf(stderr, "Please set HOME environment variable.\n");
-    return(1);
+    return(r);
 
     break;
   case 2:
+    r.result = 2;
     fprintf(stderr, "Could not open config file: %s\n", menu_get_config_path());
-    return(2);
+    return(r);
 
     break;
   case 3:
+    r.result = 3;
     fprintf(stderr, "Memory allocation error. Could not open config file: %s\n", menu_get_config_path());
-    return(3);
+    return(r);
 
     break;
   case 4:
+    r.result = 4;
     fprintf(stderr, "Invalid line format detected in config file: %s.\n", menu_get_config_path());
-    return(4);
+    return(r);
 
     break;
   }
@@ -46,6 +55,7 @@ int menu_simple(){
       }
       break;
     case KEY_DOWN:
+    case KEY_SPACE:
     case KEY_J:
       if (lo < menu_get_count()) {
         ++lo;
@@ -78,17 +88,20 @@ int menu_simple(){
     menu_show(VERSION, lo, fo);
   }
   menu_end();
+  r.selected = lo;
+
+  r.result = fo - 1;
   switch (fo) {
   case 1:
     log_info("menu ended. selected option #%d", lo);
     log_info("      cmd: %s", get_command(lo));
+    r.command = strdup(get_command(lo));
     break;
   case 2:
     log_info("menu cancelled");
     break;
   default:
     log_error("unhandled menu result %d", fo);
-    return(10);
 
     break;
   }
@@ -96,5 +109,5 @@ int menu_simple(){
   fflush(stdout);
   menu_free_all();
 
-  return(0);
+  return(r);
 } /* menu_simple */

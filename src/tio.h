@@ -6,7 +6,7 @@
 // any later version.  See LICENSE for more details.
 
 #ifndef TIO_H
-#define TIO_H 1
+#define TIO_H    1
 
 void tio_init_terminal(void);
 void tio_restore_terminal(void);
