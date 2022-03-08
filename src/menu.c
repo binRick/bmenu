@@ -95,24 +95,6 @@ int menu_load(void) {
   char *specifed_debug_mode  = getenv("DEBUG_MODE");
   char *homeDir              = getenv("HOME");
 
-/*
- * for(int i=0; i<=5; i++){
- *  log_info("Log Level #%d: %s", i, log_level_string(i));
- * }
- * log_set_level(DEFAULT_LOG_LEVEL);
- * log_info("Configured Log Level #%d:  %s", DEFAULT_LOG_LEVEL, log_level_string(DEFAULT_LOG_LEVEL));
- * if (specifed_debug_mode != NULL){
- *  log_info("Specified Debug Mode: %s", specifed_debug_mode);
- *  if (strcasecmp(specifed_debug_mode,"1") == 0){
- *    log_set_level(1);
- *    log_info("Debug Mode Enabled");
- *  }
- * }
- * if (specifed_log_level != NULL){
- *  log_info("Configuring Specified Log Level: %s", specifed_log_level);
- * }
- */
-
   if (specifed_config_file != NULL && strlen(specifed_config_file) > 0) {
     menuConfigPath = malloc(strlen(specifed_config_file) + 2);
     strcpy(menuConfigPath, specifed_config_file);

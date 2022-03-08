@@ -1,43 +1,63 @@
-#include "../../log/log.c"
+#include "log/log.c"
+#include "time/timequick.h"
+#include "time/timestamp.c"
 #include "menu-simple.h"
 #include "menu.h"
 #include <stdio.h>
 #include <unistd.h>
 
-struct MenuResult menu_simple(){
-  struct MenuResult *R = malloc(sizeof(MenuResult));
 
-  sprintf(&R->command, "%s", "UNKNOWN");
-  struct MenuResult r = *R;
+struct MenuResult1 * new_menu_result(){
+  struct MenuResult1 *t = malloc(sizeof(MenuResult1));
+  t->started = timestamp();
+  t->ok = false;
+  sprintf(&t->command, "%s", "UNKNOWN");
+  t->items  = menu_get_count();
+    return t;
+}
+
+struct MenuResult1 * menu_simple(){
+  struct MenuResult1 *R = new_menu_result();
   int               c, lo = 1, fo = 1;
 
-  r.result = menu_load();
-  r.items  = menu_get_count();
+  tq_start("menu load");
+  R->result = menu_load();
+  R->dur = strdup(tq_stop("menu load"));
+  R->ended = timestamp();
+  R->ms = R->ended - R->started;
 
-  log_info("%d items> res:%d", menu_get_count(), r.result);
+  log_info("%d items> res:%d in %s", R->items, R->result, R->dur);
 
-  switch (r.result) {
+  switch (R->result) {
+  case 0:
+      log_debug(
+              AC_RESETALL AC_GREEN AC_REVERSED "#%d Items loaded!" AC_RESETALL
+              "",
+              menu_get_count()
+              );
+
+    break;
   case 1:
     fprintf(stderr, "Please set HOME environment variable.\n");
-    return(r);
+    return(R);
 
     break;
   case 2:
-    r.result = 2;
+    R->result = 2;
     fprintf(stderr, "Could not open config file: %s\n", menu_get_config_path());
-    return(r);
+    return(R);
 
     break;
   case 3:
-    r.result = 3;
+    R->result = 3;
     fprintf(stderr, "Memory allocation error. Could not open config file: %s\n", menu_get_config_path());
-    return(r);
+    return(R);
 
     break;
   case 4:
-    r.result = 4;
+    R->result = 4;
     fprintf(stderr, "Invalid line format detected in config file: %s.\n", menu_get_config_path());
-    return(r);
+    return(R);
 
     break;
   }
@@ -88,14 +108,15 @@ struct MenuResult menu_simple(){
     menu_show(VERSION, lo, fo);
   }
   menu_end();
-  r.selected = lo;
+  R->selected = lo;
 
-  r.result = fo - 1;
+  R->result = (fo - 1);
   switch (fo) {
   case 1:
+      R->ok = true;
+    R->command = strdup(get_command(lo));
     log_info("menu ended. selected option #%d", lo);
-    log_info("      cmd: %s", get_command(lo));
-    r.command = strdup(get_command(lo));
+    log_info("      cmd: %s", R->command);
     break;
   case 2:
     log_info("menu cancelled");
@@ -109,5 +130,5 @@ struct MenuResult menu_simple(){
   fflush(stdout);
   menu_free_all();
 
-  return(r);
+  return(R);
 } /* menu_simple */
